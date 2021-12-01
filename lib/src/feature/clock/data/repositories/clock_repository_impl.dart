@@ -89,14 +89,16 @@ class ClockRepositoryImpl implements ClockRepository {
     try {
       var result = await datasource.setIsActiveAlarm(
           alarmId: alarmId, isActive: isActive);
-      if (isActive) {
-        await datasource.getAlarm(alarmId: alarmId).then((value) async {
-          await sl<notif.Notification>().scheduleNotification(
-              alarmId: alarmId, alarmTimeInMs: value.alarmTimeInMs);
-        });
-      } else if (!isActive) {
-        await sl<FlutterLocalNotificationsPlugin>().cancel(alarmId);
-      }
+      return Right(result);
+    } on DatabaseException {
+      return Left(DatabaseFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Alarm>>> getAllAlarm() async {
+    try {
+      var result = await datasource.getAllAlarm();
       return Right(result);
     } on DatabaseException {
       return Left(DatabaseFailure());

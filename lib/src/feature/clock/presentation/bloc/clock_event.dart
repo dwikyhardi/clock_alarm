@@ -50,3 +50,13 @@ class SetIsActiveAlarmEvent extends ClockEvent {
   @override
   List<Object> get props => [alarmId,isActive];
 }
+
+class OpenChartEvent extends ClockEvent {
+
+  final BuildContext context;
+
+  const OpenChartEvent(this.context);
+
+  @override
+  List<Object> get props => [context];
+}

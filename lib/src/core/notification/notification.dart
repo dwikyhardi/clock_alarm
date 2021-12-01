@@ -5,6 +5,7 @@ import 'package:clock_alarm/src/core/di/injection_container.dart';
 import 'package:clock_alarm/src/feature/clock/presentation/bloc/clock_bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:nav_router/nav_router.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -79,6 +80,7 @@ class Notification {
     Map<String, dynamic> payload = jsonDecode(remoteMessage ?? '');
     sl<ClockBloc>().add(StopAlarmEvent(
         payload['alarmId'], DateTime.now().millisecondsSinceEpoch));
+    sl<ClockBloc>().add(OpenChartEvent(navGK.currentState!.context));
   }
 
   Future<dynamic> showNotification(

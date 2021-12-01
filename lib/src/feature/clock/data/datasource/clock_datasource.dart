@@ -1,4 +1,6 @@
+import 'package:clock_alarm/src/core/di/injection_container.dart';
 import 'package:clock_alarm/src/core/error/exception.dart';
+import 'package:clock_alarm/src/core/notification/notification.dart' as notif;
 import 'package:clock_alarm/src/feature/clock/data/model/alarm_model.dart';
 import 'package:clock_alarm/src/feature/clock/data/table/alarm_table.dart';
 import 'package:clock_alarm/src/feature/clock/domain/entities/alarm.dart';
@@ -16,6 +18,8 @@ abstract class ClockDatasource {
   Future<bool> setIsActiveAlarm({required int alarmId, required bool isActive});
 
   Stream<List<Alarm>> streamAlarm();
+
+  Future<List<Alarm>> getAllAlarm();
 }
 
 class ClockDataSourceImpl implements ClockDatasource {
@@ -78,7 +82,34 @@ class ClockDataSourceImpl implements ClockDatasource {
   Future<bool> setIsActiveAlarm(
       {required int alarmId, required bool isActive}) async {
     try {
-      return await database.appDao.setIsActiveAlarm(alarmId, isActive);
+      int? newAlarmTimeInMs;
+      if (isActive) {
+        await getAlarm(alarmId: alarmId).then((value) async {
+          DateTime alarmTime =
+              DateTime.fromMillisecondsSinceEpoch(value.alarmTimeInMs);
+          if (alarmTime.isAfter(DateTime.now())) {
+            await sl<notif.Notification>().scheduleNotification(
+                alarmId: alarmId, alarmTimeInMs: value.alarmTimeInMs);
+          } else {
+            newAlarmTimeInMs =
+                alarmTime.add(const Duration(days: 1)).millisecondsSinceEpoch;
+          }
+        });
+      } else if (!isActive) {
+        await sl<FlutterLocalNotificationsPlugin>().cancel(alarmId);
+      }
+
+      return await database.appDao
+          .setIsActiveAlarm(alarmId, isActive, newAlarmTimeInMs);
+    } on Exception {
+      throw DatabaseException();
+    }
+  }
+
+  @override
+  Future<List<Alarm>> getAllAlarm() async {
+    try {
+      return await database.appDao.getAllAlarm();
     } on Exception {
       throw DatabaseException();
     }

@@ -101,13 +101,15 @@ class AppDao extends DatabaseAccessor<AppDatabase> with _$AppDaoMixin {
     }
   }
 
-  Future<bool> setIsActiveAlarm(int alarmId, bool isActive) async {
+  Future<bool> setIsActiveAlarm(
+      int alarmId, bool isActive, int? newAlarmTimeInMs) async {
     try {
       var newEntity = await getAlarm(alarmId);
       return await update(alarmTable).replace(AlarmTableData(
-          alarmTimeInMs: newEntity.alarmTimeInMs,
+          alarmTimeInMs: newAlarmTimeInMs ?? newEntity.alarmTimeInMs,
           alarmId: alarmId,
-          timeToStopAlarm: newEntity.timeToStopAlarm,
+          timeToStopAlarm:
+              newAlarmTimeInMs != null ? 0 : newEntity.timeToStopAlarm,
           isActive: isActive,
           isStop: !isActive));
     } on Exception {
@@ -133,5 +135,27 @@ class AppDao extends DatabaseAccessor<AppDatabase> with _$AppDaoMixin {
           ]))
         .watch()
         .transform(transformer);
+  }
+
+  Future<List<AlarmModels>> getAllAlarm() async {
+    return await (select(alarmTable)
+          ..orderBy([
+            (t) => OrderingTerm(
+                expression: t.alarmTimeInMs, mode: OrderingMode.desc),
+          ]))
+        .get()
+        .then((value) {
+      List<AlarmModels> data = [];
+      for (var element in value) {
+        data.add(AlarmModels(
+          alarmTimeInMs: element.alarmTimeInMs,
+          timeToStopAlarm: element.timeToStopAlarm ?? 0,
+          isActive: element.isActive ?? true,
+          isStop: element.isStop ?? false,
+          alarmId: element.alarmId,
+        ));
+      }
+      return data;
+    });
   }
 }

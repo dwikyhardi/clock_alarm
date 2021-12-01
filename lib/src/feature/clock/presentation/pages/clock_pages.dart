@@ -53,16 +53,32 @@ class _ClockPagesState extends State<ClockPages> {
             ),
             Transform.translate(
               offset: const Offset(0, -50),
-              child: FloatingActionButton(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-                onPressed: () {
-                  BlocProvider.of<ClockBloc>(context)
-                      .add(AddAlarmEvent(_dateTime.millisecondsSinceEpoch));
-                },
-                child: Icon(
-                  Icons.add,
-                  color: Theme.of(context).colorScheme.onSecondary,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  FloatingActionButton(
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    onPressed: () {
+                      BlocProvider.of<ClockBloc>(context)
+                          .add(AddAlarmEvent(_dateTime.millisecondsSinceEpoch));
+                    },
+                    child: Icon(
+                      Icons.add,
+                      color: Theme.of(context).colorScheme.onSecondary,
+                    ),
+                  ),
+                  FloatingActionButton(
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    onPressed: () {
+                      BlocProvider.of<ClockBloc>(context)
+                          .add(OpenChartEvent(context));
+                    },
+                    child: Icon(
+                      Icons.stacked_line_chart,
+                      color: Theme.of(context).colorScheme.onSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
             StreamBuilder<List<Alarm>>(
@@ -91,7 +107,7 @@ class _ClockPagesState extends State<ClockPages> {
   }
 
   Widget _alarmChild(Alarm? alarmData) {
-    DateFormat formatter = DateFormat('HH:mm, EE dd MMM');
+    DateFormat formatter = DateFormat('HH:mm');
     return Slidable(
       enabled: true,
       closeOnScroll: true,
@@ -124,11 +140,7 @@ class _ClockPagesState extends State<ClockPages> {
             : const SizedBox(),
         subtitle: (alarmData?.timeToStopAlarm ?? 0) != 0
             ? Text(
-                formatter.format(
-                  DateTime.fromMillisecondsSinceEpoch(
-                    alarmData?.timeToStopAlarm ?? 0,
-                  ),
-                ),
+                '${((alarmData?.timeToStopAlarm ?? 0) - (alarmData?.alarmTimeInMs ?? 0)) / 1000}s',
               )
             : const SizedBox(),
         trailing: CupertinoSwitch(

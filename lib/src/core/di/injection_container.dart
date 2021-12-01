@@ -5,6 +5,7 @@ import 'package:clock_alarm/src/feature/clock/data/table/alarm_table.dart';
 import 'package:clock_alarm/src/feature/clock/domain/repositories/clock_repository.dart';
 import 'package:clock_alarm/src/feature/clock/domain/usecases/add_alarm_usecase.dart';
 import 'package:clock_alarm/src/feature/clock/domain/usecases/get_alarm_usecase.dart';
+import 'package:clock_alarm/src/feature/clock/domain/usecases/get_all_alarm_usecase.dart';
 import 'package:clock_alarm/src/feature/clock/domain/usecases/remove_alarm_usecase.dart';
 import 'package:clock_alarm/src/feature/clock/domain/usecases/set_active_alarm_usecase.dart';
 import 'package:clock_alarm/src/feature/clock/domain/usecases/stop_alarm_usecase.dart';
@@ -16,17 +17,17 @@ import 'package:get_it/get_it.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
-
   ///Feature Alarm
   //Bloc
   sl.registerFactory(() => ClockBloc(
-    addAlarmUseCase: sl(),
-    gatAlarmUseCase: sl(),
-    removeAlarmUseCase: sl(),
-    stopAlarmUseCase: sl(),
-    streamAlarmUseCase: sl(),
-    setActiveAlarmUseCase: sl(),
-  ));
+        addAlarmUseCase: sl(),
+        gatAlarmUseCase: sl(),
+        removeAlarmUseCase: sl(),
+        stopAlarmUseCase: sl(),
+        streamAlarmUseCase: sl(),
+        setActiveAlarmUseCase: sl(),
+        getAllAlarmUseCase: sl(),
+      ));
 
   //UseCase
   sl.registerFactory(() => StreamAlarmUseCase(sl()));
@@ -35,17 +36,17 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RemoveAlarmUseCase(sl()));
   sl.registerLazySingleton(() => StopAlarmUseCase(sl()));
   sl.registerLazySingleton(() => SetActiveAlarmUseCase(sl()));
+  sl.registerLazySingleton(() => GetAllAlarmUseCase(sl()));
 
   //Repository
   sl.registerLazySingleton<ClockRepository>(() => ClockRepositoryImpl(sl()));
 
   //Datasource
-  sl.registerFactory<ClockDatasource>(() => ClockDataSourceImpl(sl(),sl()));
+  sl.registerFactory<ClockDatasource>(() => ClockDataSourceImpl(sl(), sl()));
 
   ///Core
   //Database
   sl.registerLazySingleton(() => AppDatabase());
   sl.registerLazySingleton(() => FlutterLocalNotificationsPlugin());
   sl.registerLazySingleton(() => Notification());
-
 }
