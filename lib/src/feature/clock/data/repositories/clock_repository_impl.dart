@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:clock_alarm/src/core/di/injection_container.dart';
 import 'package:clock_alarm/src/core/error/exception.dart';
 import 'package:clock_alarm/src/core/error/failure.dart';
+import 'package:clock_alarm/src/core/notification/notification.dart' as notif;
 import 'package:clock_alarm/src/feature/clock/data/datasource/clock_datasource.dart';
 import 'package:clock_alarm/src/feature/clock/domain/entities/alarm.dart';
 import 'package:clock_alarm/src/feature/clock/domain/repositories/clock_repository.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class ClockRepositoryImpl implements ClockRepository {
   final ClockDatasource datasource;
@@ -17,6 +20,10 @@ class ClockRepositoryImpl implements ClockRepository {
     try {
       var id = await datasource.addAlarm(alarmTimeInMs: alarmTimeInMs);
       Alarm result = await datasource.getAlarm(alarmId: id);
+
+      sl<notif.Notification>().scheduleNotification(
+          alarmId: result.alarmId ?? 0, alarmTimeInMs: result.alarmTimeInMs);
+
       return Right(result);
     } on DatabaseException {
       return Left(DatabaseFailure());
@@ -24,9 +31,11 @@ class ClockRepositoryImpl implements ClockRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> stopAlarm({required int alarmId}) async {
+  Future<Either<Failure, bool>> stopAlarm(
+      {required int alarmId, required int timeToStopAlarm}) async {
     try {
-      var result = await datasource.stopAlarm(alarmId: alarmId);
+      var result = await datasource.stopAlarm(
+          alarmId: alarmId, timeToStopAlarm: timeToStopAlarm);
       return Right(result);
     } on DatabaseException {
       return Left(DatabaseFailure());
@@ -46,6 +55,7 @@ class ClockRepositoryImpl implements ClockRepository {
   @override
   Future<Either<Failure, bool>> removeAlarm({required int alarmId}) async {
     try {
+      await sl<FlutterLocalNotificationsPlugin>().cancel(alarmId);
       await datasource.deleteAlarm(alarmId: alarmId);
       return const Right(true);
     } on DatabaseException {
@@ -72,11 +82,23 @@ class ClockRepositoryImpl implements ClockRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> setActiveAlarm({required int alarmId, required bool isActive}) async{
-    try{
-      var result = await datasource.setIsActiveAlarm(alarmId: alarmId, isActive: isActive);
+  Future<Either<Failure, bool>> setActiveAlarm({
+    required int alarmId,
+    required bool isActive,
+  }) async {
+    try {
+      var result = await datasource.setIsActiveAlarm(
+          alarmId: alarmId, isActive: isActive);
+      if (isActive) {
+        await datasource.getAlarm(alarmId: alarmId).then((value) async {
+          await sl<notif.Notification>().scheduleNotification(
+              alarmId: alarmId, alarmTimeInMs: value.alarmTimeInMs);
+        });
+      } else if (!isActive) {
+        await sl<FlutterLocalNotificationsPlugin>().cancel(alarmId);
+      }
       return Right(result);
-    }on DatabaseException{
+    } on DatabaseException {
       return Left(DatabaseFailure());
     }
   }

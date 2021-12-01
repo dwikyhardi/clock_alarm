@@ -87,17 +87,15 @@ class AppDao extends DatabaseAccessor<AppDatabase> with _$AppDaoMixin {
     }
   }
 
-  Future<bool> stopAlarm(int alarmId) async {
+  Future<bool> stopAlarm(int alarmId, int timeToStopAlarm) async {
     try {
       var newEntity = await getAlarm(alarmId);
-      return await (update(alarmTable)
-            ..where((tbl) => tbl.alarmId.equals(alarmId)))
-          .replace(AlarmTableData(
-              alarmTimeInMs: newEntity.alarmTimeInMs,
-              alarmId: alarmId,
-              timeToStopAlarm: newEntity.timeToStopAlarm,
-              isActive: newEntity.isActive,
-              isStop: true));
+      return await update(alarmTable).replace(AlarmTableData(
+          alarmTimeInMs: newEntity.alarmTimeInMs,
+          alarmId: alarmId,
+          timeToStopAlarm: timeToStopAlarm,
+          isActive: false,
+          isStop: true));
     } on Exception {
       throw DatabaseException();
     }
@@ -111,7 +109,7 @@ class AppDao extends DatabaseAccessor<AppDatabase> with _$AppDaoMixin {
           alarmId: alarmId,
           timeToStopAlarm: newEntity.timeToStopAlarm,
           isActive: isActive,
-          isStop: newEntity.isStop));
+          isStop: !isActive));
     } on Exception {
       throw DatabaseException();
     }
@@ -123,7 +121,6 @@ class AppDao extends DatabaseAccessor<AppDatabase> with _$AppDaoMixin {
             (List<AlarmTableData> event, EventSink<List<AlarmModels>> output) {
       List<AlarmModels> data = [];
       for (var element in event) {
-        print('Data in Database ${element.toJson()}');
         data.add(AlarmModels.fromJson(element.toJson()));
       }
       output.add(data);

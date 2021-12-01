@@ -2,6 +2,7 @@ import 'package:clock_alarm/src/core/error/exception.dart';
 import 'package:clock_alarm/src/feature/clock/data/model/alarm_model.dart';
 import 'package:clock_alarm/src/feature/clock/data/table/alarm_table.dart';
 import 'package:clock_alarm/src/feature/clock/domain/entities/alarm.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 abstract class ClockDatasource {
   Future<int> addAlarm({required int alarmTimeInMs});
@@ -10,17 +11,18 @@ abstract class ClockDatasource {
 
   Future<Alarm> getAlarm({required int alarmId});
 
-  Future<bool> stopAlarm({required int alarmId});
+  Future<bool> stopAlarm({required int alarmId, required int timeToStopAlarm});
 
-  Future<bool> setIsActiveAlarm({required int alarmId,required bool isActive});
+  Future<bool> setIsActiveAlarm({required int alarmId, required bool isActive});
 
   Stream<List<Alarm>> streamAlarm();
 }
 
 class ClockDataSourceImpl implements ClockDatasource {
   final AppDatabase database;
+  final FlutterLocalNotificationsPlugin notificationsPlugin;
 
-  ClockDataSourceImpl(this.database);
+  ClockDataSourceImpl(this.database, this.notificationsPlugin);
 
   @override
   Future<int> addAlarm({required int alarmTimeInMs}) async {
@@ -63,16 +65,18 @@ class ClockDataSourceImpl implements ClockDatasource {
   }
 
   @override
-  Future<bool> stopAlarm({required int alarmId}) async {
+  Future<bool> stopAlarm(
+      {required int alarmId, required int timeToStopAlarm}) async {
     try {
-      return await database.appDao.stopAlarm(alarmId);
+      return await database.appDao.stopAlarm(alarmId, timeToStopAlarm);
     } on Exception {
       throw DatabaseException();
     }
   }
 
   @override
-  Future<bool> setIsActiveAlarm({required int alarmId,required bool isActive}) async {
+  Future<bool> setIsActiveAlarm(
+      {required int alarmId, required bool isActive}) async {
     try {
       return await database.appDao.setIsActiveAlarm(alarmId, isActive);
     } on Exception {

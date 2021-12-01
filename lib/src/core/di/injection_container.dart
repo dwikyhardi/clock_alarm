@@ -1,3 +1,4 @@
+import 'package:clock_alarm/src/core/notification/notification.dart';
 import 'package:clock_alarm/src/feature/clock/data/datasource/clock_datasource.dart';
 import 'package:clock_alarm/src/feature/clock/data/repositories/clock_repository_impl.dart';
 import 'package:clock_alarm/src/feature/clock/data/table/alarm_table.dart';
@@ -9,6 +10,7 @@ import 'package:clock_alarm/src/feature/clock/domain/usecases/set_active_alarm_u
 import 'package:clock_alarm/src/feature/clock/domain/usecases/stop_alarm_usecase.dart';
 import 'package:clock_alarm/src/feature/clock/domain/usecases/stream_alarm_usecase.dart';
 import 'package:clock_alarm/src/feature/clock/presentation/bloc/clock_bloc.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get_it/get_it.dart';
 
 final sl = GetIt.instance;
@@ -38,10 +40,12 @@ Future<void> init() async {
   sl.registerLazySingleton<ClockRepository>(() => ClockRepositoryImpl(sl()));
 
   //Datasource
-  sl.registerFactory<ClockDatasource>(() => ClockDataSourceImpl(sl()));
+  sl.registerFactory<ClockDatasource>(() => ClockDataSourceImpl(sl(),sl()));
 
   ///Core
   //Database
   sl.registerLazySingleton(() => AppDatabase());
+  sl.registerLazySingleton(() => FlutterLocalNotificationsPlugin());
+  sl.registerLazySingleton(() => Notification());
 
 }

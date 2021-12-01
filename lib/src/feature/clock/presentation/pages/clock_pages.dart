@@ -7,8 +7,8 @@ import 'package:clock_alarm/src/feature/clock/presentation/painter/clock_painter
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
 
 class ClockPages extends StatefulWidget {
   static const routeName = '/';
@@ -41,7 +41,7 @@ class _ClockPagesState extends State<ClockPages> {
           children: [
             SizedBox(
               height: MediaQuery.of(context).size.height -
-                  AppBar().preferredSize.height,
+                  (AppBar().preferredSize.height * 2.5),
               width: MediaQuery.of(context).size.width,
               child: Stack(
                 alignment: Alignment.center,
@@ -49,6 +49,20 @@ class _ClockPagesState extends State<ClockPages> {
                   _analogWatchFace(context),
                   _digitalWatchFace(context),
                 ],
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(0, -50),
+              child: FloatingActionButton(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                onPressed: () {
+                  BlocProvider.of<ClockBloc>(context)
+                      .add(AddAlarmEvent(_dateTime.millisecondsSinceEpoch));
+                },
+                child: Icon(
+                  Icons.add,
+                  color: Theme.of(context).colorScheme.onSecondary,
+                ),
               ),
             ),
             StreamBuilder<List<Alarm>>(
@@ -73,53 +87,58 @@ class _ClockPagesState extends State<ClockPages> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        elevation: 5,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Alarm'),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        onPressed: () {
-          BlocProvider.of<ClockBloc>(context)
-              .add(AddAlarmEvent(_dateTime.millisecondsSinceEpoch));
-        },
-        child: Icon(
-          Icons.add,
-          color: Theme.of(context).colorScheme.onSecondary,
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
   Widget _alarmChild(Alarm? alarmData) {
-    DateFormat formatter = DateFormat('HH:mm');
+    DateFormat formatter = DateFormat('HH:mm, EE dd MMM');
     return Slidable(
-
+      enabled: true,
+      closeOnScroll: true,
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        children: [
+          SlidableAction(
+            flex: 2,
+            autoClose: true,
+            onPressed: (BuildContext buildContext) {
+              BlocProvider.of<ClockBloc>(context)
+                  .add(RemoveAlarmEvent(alarmData?.alarmId ?? -1));
+            },
+            backgroundColor: CupertinoColors.destructiveRed,
+            foregroundColor: CupertinoColors.white,
+            icon: Icons.delete,
+            label: 'Delete',
+          ),
+        ],
+      ),
       child: ListTile(
-        title: Text(
-          formatter.format(
-            DateTime.fromMillisecondsSinceEpoch(
-              alarmData?.alarmTimeInMs ?? 0,
-            ),
-          ),
-        ),
-        subtitle: Text(
-          formatter.format(
-            DateTime.fromMillisecondsSinceEpoch(
-              alarmData?.timeToStopAlarm ?? 0,
-            ),
-          ),
-        ),
+        title: (alarmData?.alarmTimeInMs ?? 0) != 0
+            ? Text(
+                formatter.format(
+                  DateTime.fromMillisecondsSinceEpoch(
+                    alarmData?.alarmTimeInMs ?? 0,
+                  ),
+                ),
+              )
+            : const SizedBox(),
+        subtitle: (alarmData?.timeToStopAlarm ?? 0) != 0
+            ? Text(
+                formatter.format(
+                  DateTime.fromMillisecondsSinceEpoch(
+                    alarmData?.timeToStopAlarm ?? 0,
+                  ),
+                ),
+              )
+            : const SizedBox(),
         trailing: CupertinoSwitch(
           onChanged: (change) {
-            BlocProvider.of<ClockBloc>(context).add(SetIsActiveAlarmEvent(
-              alarmData?.alarmId ?? -1,
-              change,
-            ));
+            BlocProvider.of<ClockBloc>(context).add(
+              SetIsActiveAlarmEvent(
+                alarmData?.alarmId ?? -1,
+                change,
+              ),
+            );
           },
           value: alarmData?.isActive ?? false,
         ),
@@ -128,7 +147,7 @@ class _ClockPagesState extends State<ClockPages> {
   }
 
   Widget _analogWatchFace(BuildContext context) {
-    DateFormat formatter = DateFormat('EE dd');
+    DateFormat formatter = DateFormat('EE dd MMM');
     return Stack(
       children: [
         Center(

@@ -10,7 +10,7 @@ import 'package:clock_alarm/src/feature/clock/domain/usecases/get_alarm_usecase.
 import 'package:clock_alarm/src/feature/clock/domain/usecases/remove_alarm_usecase.dart';
 import 'package:clock_alarm/src/feature/clock/domain/usecases/set_active_alarm_usecase.dart'
     as paramIsActive;
-import 'package:clock_alarm/src/feature/clock/domain/usecases/stop_alarm_usecase.dart';
+import 'package:clock_alarm/src/feature/clock/domain/usecases/stop_alarm_usecase.dart' as paramStop;
 import 'package:clock_alarm/src/feature/clock/domain/usecases/stream_alarm_usecase.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
@@ -23,7 +23,7 @@ class ClockBloc extends Bloc<ClockEvent, ClockState> {
   final addAlarm.AddAlarmUseCase addAlarmUseCase;
   final GatAlarmUseCase gatAlarmUseCase;
   final RemoveAlarmUseCase removeAlarmUseCase;
-  final StopAlarmUseCase stopAlarmUseCase;
+  final paramStop.StopAlarmUseCase stopAlarmUseCase;
   final StreamAlarmUseCase streamAlarmUseCase;
   final paramIsActive.SetActiveAlarmUseCase setActiveAlarmUseCase;
 
@@ -58,7 +58,7 @@ class ClockBloc extends Bloc<ClockEvent, ClockState> {
   }
 
   void onStopAlarmEvent(StopAlarmEvent event, Emitter<ClockState> emitter) {
-    stopAlarmUseCase(Params(alarmId: event.alarmId));
+    stopAlarmUseCase(paramStop.Params(alarmId: event.alarmId, timeToStopAlarm: event.timeToStopAlarm));
   }
 
   void onGetAlarmEvent(GetAlarmEvent event, Emitter<ClockState> emitter) {

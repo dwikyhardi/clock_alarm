@@ -24,11 +24,12 @@ class RemoveAlarmEvent extends ClockEvent {
 
 class StopAlarmEvent extends ClockEvent {
   final int alarmId;
+  final int timeToStopAlarm;
 
-  const StopAlarmEvent(this.alarmId);
+  const StopAlarmEvent(this.alarmId, this.timeToStopAlarm);
 
   @override
-  List<Object> get props => [alarmId];
+  List<Object> get props => [alarmId, timeToStopAlarm];
 }
 
 class GetAlarmEvent extends ClockEvent {
