@@ -170,7 +170,7 @@ class _ChartViewState extends State<ChartView> {
           List.generate(_maxY ~/ 5, (index) => (index + 1) * 5),
           List.generate(_maxY ~/ 5, (index) => '${(index + 1) * 5}s'),
         );
-      } else if (_maxY >= 100 && _maxY <= 1000) {
+      } else if (_maxY > 61  && _maxY <= 1000) {
         sideTitle = Map.fromIterables(
           List.generate(_maxY ~/ 20, (index) => (index + 1) * 20),
           List.generate(_maxY ~/ 20, (index) => '${(index + 1) * 20}s'),
